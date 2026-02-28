@@ -84,19 +84,14 @@ def main():
         
         if generate_btn:
             if not uploaded_file or not job_description:
-                st.warning("⚠️ Action Required: Please provide both a resume file and a job description to proceed.")
+                st.warning("⚠️ Action Required: Please provide both a resume file and a job description.")
             else:
-                # Using a status container for a professional 'processing' feel
                 with st.status("Analyzing alignment...", expanded=True) as status:
-                    st.write("Extracting source text...")
                     file_ext = uploaded_file.name.split('.')[-1].lower()
                     original_text = model.extract_text(uploaded_file, file_ext)
                     
                     if original_text:
-                        st.write("Mapping keywords to Job Description...")
-                        st.write("Synthesizing 'Truth-Adjacent' metrics...")
-                        
-                        # Call the AI Logic
+                        # 1. Generate the text
                         optimized_resume = model.generate_tailored_resume(
                             target_title, 
                             job_description, 
@@ -105,6 +100,22 @@ def main():
                         
                         status.update(label="Optimization Complete!", state="complete", expanded=False)
 
+                        # 2. Display the Preview
+                        st.markdown("### Preview Optimized Draft")
+                        st.text_area("Live Editor", value=optimized_resume, height=400)
+
+                        # 3. Create and Show Download Button
+                        # This must stay visible and active
+                        doc_download = model.create_word_doc(optimized_resume)
+                        
+                        st.download_button(
+                            label="📥 DOWNLOAD PROFESSIONAL .DOCX",
+                            data=doc_download,
+                            file_name=f"Optimized_Resume_{target_title.replace(' ', '_')}.docx",
+                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            use_container_width=True,
+                            key="download_btn" # Adding a unique key helps Streamlit track it
+                        )
                         # Display Preview
                         st.markdown("### Preview Optimized Draft")
                         st.info("The text below has been restructured for ATS compatibility and keyword density.")
