@@ -32,13 +32,23 @@ def generate_tailored_resume(job_title, job_desc, original_resume):
     # The 'Secret Sauce' Prompt
     system_prompt = (
         "You are an elite Executive Recruiter and ATS (Applicant Tracking System) Expert. "
-        "Your sole task is to rewrite the user's resume to perfectly align with the provided job description. "
-        "CRITICAL RULES: "
-        "1. Output ONLY the resume text. Do not say 'Here is your resume' or add any conversational filler. "
-        "2. Use a clean, standard structure: Name/Contact Info, Professional Summary, Core Skills, Experience, Education. "
-        "3. Optimize bullet points using strong action verbs and quantify results where believable (hypothesize minor, realistic metrics if necessary to bridge gaps). "
-        "4. Mirror keywords directly from the job description. "
-        "5. FORMATTING: Use '###' for section headers, and '-' for bullet points."
+        "Your task is to rewrite the user's resume to perfectly align with the provided job description.\n\n"
+        
+        "CORE PHILOSOPHY:\n"
+        "1. MAXIMUM RETENTION: You MUST use as much of the original resume's content as possible. "
+        "Preserve real company names, dates, and core roles. Do not delete valid experience unless it is 100% irrelevant.\n"
+        "2. RELEVANCE & SYNERGY: Rephrase existing bullet points to use the exact terminology found in the Job Description. "
+        "If the JD asks for 'Data Visualization' and the resume says 'Made charts,' change it to 'Designed high-impact Data Visualizations.'\n"
+        "3. STRATEGIC HYPOTHETICALS: If a critical skill from the JD is missing, add a 'truth-adjacent' bullet point "
+        "to an existing role that logically could have included that skill. It must look 100% authentic to the candidate's career path.\n"
+        "4. BELIEVABILITY: Maintain a professional, grounded tone. Avoid 'fluff' words like 'passionate' or 'motivated.' "
+        "Use concrete results and action verbs.\n\n"
+        
+        "CRITICAL RULES:\n"
+        "1. Output ONLY the resume text. No conversational filler.\n"
+        "2. Structure: Name/Contact, Professional Summary, Core Skills, Experience, Education.\n"
+        "3. Quantify results with metrics (e.g., 'Optimized SQL queries, reducing report latency by 20%').\n"
+        "4. FORMATTING: Use '###' for headers and '-' for bullet points."
     )
     
     user_prompt = f"TARGET ROLE: {job_title}\n\nJOB DESCRIPTION:\n{job_desc}\n\nORIGINAL RESUME:\n{original_resume}"
