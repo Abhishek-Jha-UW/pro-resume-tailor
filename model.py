@@ -7,10 +7,11 @@ import streamlit as st
 
 def optimize_docx_resume(uploaded_file, job_title, job_description):
     """
-    Optimizes resume content while preserving original formatting.
-    Works only with .docx files.
+    Optimize resume content while preserving original formatting.
+    Only works with .docx files.
     """
 
+    # Load Word file
     try:
         doc = docx.Document(uploaded_file)
     except Exception:
@@ -18,9 +19,9 @@ def optimize_docx_resume(uploaded_file, job_title, job_description):
         return None
 
     # Extract non-empty paragraphs
-    paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+    original_paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
 
-    if not paragraphs:
+    if not original_paragraphs:
         st.error("No readable text found in document.")
         return None
 
@@ -32,20 +33,23 @@ You are an ATS resume optimization expert.
 Rewrite each paragraph to better align with the job description.
 
 STRICT RULES:
-- Keep the exact same number of paragraphs.
+- Keep EXACT same number of paragraphs.
 - Keep paragraph order unchanged.
-- Do NOT invent companies, roles, or degrees.
-- Return output strictly as a valid JSON list of strings.
+- Do NOT invent companies, job titles, or degrees.
+- Improve wording, impact, and keyword alignment.
+- Return output strictly as valid JSON list of strings.
+- No explanations.
 """
 
     user_prompt = f"""
-TARGET ROLE: {job_title}
+TARGET ROLE:
+{job_title}
 
 JOB DESCRIPTION:
 {job_description}
 
 RESUME PARAGRAPHS:
-{json.dumps(paragraphs)}
+{json.dumps(original_paragraphs)}
 """
 
     try:
@@ -61,24 +65,25 @@ RESUME PARAGRAPHS:
 
         optimized_paragraphs = json.loads(response.output_text)
 
-    except Exception as e:
+    except Exception:
         st.error("AI optimization failed.")
         return None
 
     # Safety check
-    if len(optimized_paragraphs) != len(paragraphs):
-        st.error("Paragraph mismatch detected. Try again.")
+    if len(optimized_paragraphs) != len(original_paragraphs):
+        st.error("Paragraph count mismatch. Try again.")
         return None
 
-    # Replace text in-place (formatting preserved)
+    # Replace text while preserving formatting
     index = 0
     for para in doc.paragraphs:
         if para.text.strip():
             para.text = optimized_paragraphs[index]
             index += 1
 
-    bio = io.BytesIO()
-    doc.save(bio)
-    bio.seek(0)
+    # Save updated document
+    output = io.BytesIO()
+    doc.save(output)
+    output.seek(0)
 
-    return bio
+    return output
