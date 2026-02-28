@@ -37,6 +37,7 @@ st.markdown("""
     }
     </style>
     """, unsafe_allow_html=True)
+
 def main():
     # --- Header ---
     st.title("💼 ResumeAlign Pro")
@@ -100,12 +101,17 @@ def main():
                         
                         status.update(label="Optimization Complete!", state="complete", expanded=False)
 
-                        # 2. Display the Preview
+                        # 2. Display the Preview (UNIQUE KEY)
                         st.markdown("### Preview Optimized Draft")
-                        st.text_area("Live Editor", value=optimized_resume, height=400)
+                        st.info("The text below has been restructured for ATS compatibility and keyword density.")
+                        st.text_area(
+                            "Live Editor",
+                            value=optimized_resume,
+                            height=400,
+                            key="optimized_output_area"
+                        )
 
-                        # 3. Create and Show Download Button
-                        # This must stay visible and active
+                        # 3. Create and Show Download Button (UNIQUE KEY)
                         doc_download = model.create_word_doc(optimized_resume)
                         
                         st.download_button(
@@ -114,27 +120,12 @@ def main():
                             file_name=f"Optimized_Resume_{target_title.replace(' ', '_')}.docx",
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             use_container_width=True,
-                            key="download_btn" # Adding a unique key helps Streamlit track it
+                            key="final_download_button"
                         )
-                        # Display Preview
-                        st.markdown("### Preview Optimized Draft")
-                        st.info("The text below has been restructured for ATS compatibility and keyword density.")
-                        st.text_area("Live Editor", value=optimized_resume, height=400)
 
-                        # Create the Word Doc for Download
-                        doc_download = model.create_word_doc(optimized_resume)
-                        
-                        st.download_button(
-                            label="📥 DOWNLOAD PROFESSIONAL .DOCX",
-                            data=doc_download,
-                            file_name=f"Optimized_Resume_{target_title.replace(' ', '_')}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True
-                        )
                     else:
                         status.update(label="Error reading file.", state="error")
         else:
-            # Placeholder when no resume is generated yet
             st.info("Upload your details and click 'Optimize' to view the generated resume here.")
             
 
