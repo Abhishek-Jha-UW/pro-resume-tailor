@@ -9,17 +9,20 @@ def optimize_docx_resume(uploaded_file, job_title, job_description):
     Optimize resume content while preserving original formatting.
     """
     try:
+        # Load Word file
         doc = docx.Document(uploaded_file)
     except Exception as e:
         st.error(f"Invalid Word document: {e}")
         return None
 
+    # Extract non-empty paragraphs
     original_paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
 
     if not original_paragraphs:
         st.error("No readable text found in document.")
         return None
 
+    # Initialize OpenAI Client
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
     system_prompt = """
@@ -37,6 +40,7 @@ STRICT RULES:
     user_prompt = f"TARGET ROLE: {job_title}\n\nJD: {job_description}\n\nRESUME: {json.dumps(original_paragraphs)}"
 
     try:
+        # --- API CALL UPDATE ---
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
@@ -44,20 +48,22 @@ STRICT RULES:
                 {"role": "user", "content": user_prompt}
             ],
             temperature=0.3,
-            response_format={ "type": "json_object" }
+            response_format={ "type": "json_object" },
+            # Ensure enough tokens for long resumes
+            max_tokens=4000 
         )
         
-        # --- FIX STARTS HERE ---
-        raw_content = response.choices[0].message.content
-        
-        if not raw_content:
-            st.error("AI returned an empty response. Try reducing content length.")
+        # --- SAFE PARSING ---
+        if not response.choices[0].message.content:
+            st.error("The AI returned a blank response. This usually happens if the resume is too long or triggers safety filters.")
             return None
-        
+            
+        raw_content = response.choices[0].message.content
         data = json.loads(raw_content)
-        # --- FIX ENDS HERE ---
         
+        # --- ROBUST DATA HANDLING ---
         if isinstance(data, dict):
+            # Attempt to find the list within the JSON object
             optimized_paragraphs = list(data.values())[0] if len(data) == 1 else data
         else:
             optimized_paragraphs = data
@@ -66,16 +72,20 @@ STRICT RULES:
         st.error(f"AI optimization failed: {e}")
         return None
 
+    # Final Safety Check
     if len(optimized_paragraphs) != len(original_paragraphs):
         st.error(f"Structure mismatch: Input {len(original_paragraphs)} vs Output {len(optimized_paragraphs)}.")
         return None
 
+    # Replace text while preserving paragraph-level formatting
     index = 0
     for para in doc.paragraphs:
         if para.text.strip():
+            # Clear existing runs to preserve paragraph style, but remove old text
             for run in para.runs:
                 run.text = ""
             
+            # Add new text to the first run
             if para.runs:
                 para.runs[0].text = optimized_paragraphs[index]
             else:
@@ -83,6 +93,7 @@ STRICT RULES:
                 
             index += 1
 
+    # Save to buffer
     output = io.BytesIO()
     doc.save(output)
     output.seek(0)
