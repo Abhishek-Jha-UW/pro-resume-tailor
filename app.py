@@ -1,7 +1,10 @@
 import streamlit as st
-import model  # Importing our logic from model.py
+import model
 
-# --- Page Configuration ---
+
+# -----------------------------
+# PAGE CONFIG
+# -----------------------------
 st.set_page_config(
     page_title="ResumeAlign Pro | AI Career Suite",
     page_icon="💼",
@@ -9,125 +12,191 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Custom Professional Styling ---
+
+# -----------------------------
+# PROFESSIONAL STYLING
+# -----------------------------
 st.markdown("""
-    <style>
-    .main {
-        background-color: #f8f9fa;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #004a99;
-        color: white;
-        font-weight: bold;
-        border: none;
-    }
-    .stButton>button:hover {
-        background-color: #003366;
-        color: white;
-    }
-    .reportview-container .main .block-container {
-        padding-top: 2rem;
-    }
-    h1 {
-        color: #1c1c1c;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+<style>
+.main {
+    background-color: #f4f6f9;
+}
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+h1 {
+    font-size: 40px;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.stButton>button {
+    width: 100%;
+    border-radius: 6px;
+    height: 3em;
+    background-color: #0f172a;
+    color: white;
+    font-weight: 600;
+    border: none;
+}
+
+.stButton>button:hover {
+    background-color: #1e293b;
+}
+
+.stDownloadButton>button {
+    background-color: #1d4ed8;
+    color: white;
+    font-weight: 600;
+    border-radius: 6px;
+    height: 3em;
+}
+
+footer {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
+
+# -----------------------------
+# SESSION STATE INIT
+# -----------------------------
+if "optimized_resume" not in st.session_state:
+    st.session_state.optimized_resume = None
+
 
 def main():
-    # --- Header ---
-    st.title("💼 ResumeAlign Pro")
-    st.markdown("##### *Enterprise-grade AI resume optimization for technical and financial analysts.*")
+
+    # -----------------------------
+    # HEADER
+    # -----------------------------
+    st.title("ResumeAlign Pro")
+    st.markdown("##### Enterprise-grade AI resume optimization for analytical and technical professionals.")
     st.divider()
 
-    # --- Main Dashboard Layout ---
     col_input, col_preview = st.columns([1, 1], gap="large")
 
+    # =============================
+    # INPUT SECTION
+    # =============================
     with col_input:
+
         st.subheader("1. Position & Context")
-        
+
         job_options = [
-            "Data Scientist (Entry Level)", 
-            "Data Scientist (Senior)", 
-            "Data Analyst", 
-            "Financial Analyst", 
-            "Pricing Analyst", 
+            "Data Scientist (Entry Level)",
+            "Data Scientist (Senior)",
+            "Data Analyst",
+            "Financial Analyst",
+            "Pricing Analyst",
             "Business Intelligence Analyst",
             "Custom Role..."
         ]
-        
+
         selected_role = st.selectbox("Select Target Job Title", job_options)
-        
+
         if selected_role == "Custom Role...":
-            target_title = st.text_input("Enter Custom Job Title", placeholder="e.g. Senior Quantitative Researcher")
+            target_title = st.text_input(
+                "Enter Custom Job Title",
+                placeholder="e.g. Senior Quantitative Researcher"
+            )
         else:
             target_title = selected_role
 
         st.subheader("2. Job Requirements")
+
         job_description = st.text_area(
-            "Paste the complete Job Description / Requirements:",
+            "Paste Complete Job Description",
             height=250,
-            placeholder="Paste text here... The AI will extract key competencies and required technologies."
+            placeholder="Paste the full job description here..."
         )
 
-        st.subheader("3. Source Document")
-        uploaded_file = st.file_uploader("Upload your current resume (PDF or DOCX)", type=["pdf", "docx"])
+        st.subheader("3. Source Resume")
+
+        uploaded_file = st.file_uploader(
+            "Upload Resume (PDF or DOCX)",
+            type=["pdf", "docx"]
+        )
 
         generate_btn = st.button("OPTIMIZE RESUME")
 
-    # --- Processing & Output ---
-    with col_preview:
-        st.subheader("4. Optimization Output")
-        
+        # ---------- GENERATION ----------
         if generate_btn:
+
             if not uploaded_file or not job_description:
-                st.warning("⚠️ Action Required: Please provide both a resume file and a job description.")
-            else:
-                with st.status("Analyzing alignment...", expanded=True) as status:
-                    file_ext = uploaded_file.name.split('.')[-1].lower()
-                    original_text = model.extract_text(uploaded_file, file_ext)
-                    
-                    if original_text:
-                        # 1. Generate the text
-                        optimized_resume = model.generate_tailored_resume(
-                            target_title, 
-                            job_description, 
-                            original_text
-                        )
-                        
-                        status.update(label="Optimization Complete!", state="complete", expanded=False)
+                st.warning("Please provide both resume and job description.")
+                return
 
-                        # 2. Display the Preview (UNIQUE KEY)
-                        st.markdown("### Preview Optimized Draft")
-                        st.info("The text below has been restructured for ATS compatibility and keyword density.")
-                        st.text_area(
-                            "Live Editor",
-                            value=optimized_resume,
-                            height=400,
-                            key="optimized_output_area"
-                        )
+            with st.status("Analyzing alignment and optimizing resume...", expanded=True) as status:
 
-                        # 3. Create and Show Download Button (UNIQUE KEY)
-                        doc_download = model.create_word_doc(optimized_resume)
-                        
-                        st.download_button(
-                            label="📥 DOWNLOAD PROFESSIONAL .DOCX",
-                            data=doc_download,
-                            file_name=f"Optimized_Resume_{target_title.replace(' ', '_')}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            use_container_width=True,
-                            key="final_download_button"
-                        )
+                file_ext = uploaded_file.name.split('.')[-1].lower()
+                original_text = model.extract_text(uploaded_file, file_ext)
 
-                    else:
-                        status.update(label="Error reading file.", state="error")
+                if not original_text:
+                    status.update(label="Error extracting text.", state="error")
+                    return
+
+                optimized = model.generate_tailored_resume(
+                    target_title,
+                    job_description,
+                    original_text
+                )
+
+                if optimized:
+                    st.session_state.optimized_resume = optimized
+                    status.update(label="Optimization Complete!", state="complete")
+                else:
+                    status.update(label="Optimization failed.", state="error")
+
+
+    # =============================
+    # OUTPUT SECTION
+    # =============================
+    with col_preview:
+
+        st.subheader("4. Optimized Output")
+
+        if st.session_state.optimized_resume:
+
+            st.markdown("### ATS-Optimized Resume Draft")
+            st.caption("You may edit the content before downloading.")
+
+            edited_resume = st.text_area(
+                "Live Editor",
+                value=st.session_state.optimized_resume,
+                height=450,
+                key="resume_editor"
+            )
+
+            # Update session state with edits
+            st.session_state.optimized_resume = edited_resume
+
+            doc_download = model.create_word_doc(edited_resume)
+
+            if doc_download:
+                st.download_button(
+                    label="Download Professional .DOCX",
+                    data=doc_download,
+                    file_name=f"Optimized_Resume_{target_title.replace(' ', '_')}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True
+                )
+
         else:
-            st.info("Upload your details and click 'Optimize' to view the generated resume here.")
-            
+            st.info("Upload your resume and job details to generate an optimized version.")
+
+
+    # -----------------------------
+    # FOOTER
+    # -----------------------------
+    st.divider()
+    st.markdown(
+        "<center><small>Designed & Developed by Abhishek Jha</small></center>",
+        unsafe_allow_html=True
+    )
+
 
 if __name__ == "__main__":
     main()
