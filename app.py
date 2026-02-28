@@ -36,8 +36,7 @@ st.markdown("""
         font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     }
     </style>
-    """, unsafe_allow_view_allowed=True)
-
+    """, unsafe_allow_html=True)
 def main():
     # --- Header ---
     st.title("💼 ResumeAlign Pro")
