@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("ResumeAlign Pro")
-st.caption("AI-powered resume optimization while preserving your original formatting.")
+st.caption("Optimize your resume while preserving your original Word formatting.")
 
 st.divider()
 
@@ -20,14 +20,14 @@ job_description = st.text_area(
 )
 
 uploaded_file = st.file_uploader(
-    "Upload your Word Resume (.docx only)",
+    "Upload Word Resume (.docx only)",
     type=["docx"]
 )
 
 if st.button("Optimize Resume"):
 
     if not uploaded_file or not job_description:
-        st.warning("Please provide resume and job description.")
+        st.warning("Please upload resume and paste job description.")
     else:
         with st.spinner("Optimizing your resume..."):
 
